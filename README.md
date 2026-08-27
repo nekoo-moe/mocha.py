@@ -543,5 +543,12 @@ dataset carries still apply to the converted output and to any model trained on 
 so check them before publishing either. `push` writes `license: other` into the
 card unless you pass `--license`.
 
-mocha.py was made by [Alexoy Vladimirov](https://alyosha.is-a.dev). Licensed with [MIT LICENSE](LICENSE).
-All issue, pull request, and disscussion are welcome. I'll active maintaining this project.
+mocha.py was made by [Alexoy Vladimirov](https://alyosha.is-a.dev), [NekoTech Foundation](https://nekofoundation.tech) and other contributors. Licensed with [MIT LICENSE](LICENSE).
+
+All issue, pull request, and disscussion are welcome. Thanks for helping to build this project for community!
+
+---
+
+<img width="960" height="536" align="center" alt="763120006_2155002818708079_6380714238316337459_n" src="https://github.com/user-attachments/assets/cbeaa528-b580-4ddb-90f8-2395a0893626" />
+
+*This image is from Godsized Game, build by [kessler](https://discord.gg/godsized).*
