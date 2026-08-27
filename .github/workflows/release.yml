@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    if: startsWith(github.event.head_commit.message, 'release: v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Extract Version
+        id: get_version
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          VERSION=$(echo "$COMMIT_MSG" | head -n 1 | grep -oP 'release: v\K[0-9]+\.[0-9]+\.[0-9]+')
+          if [ -z "$VERSION" ]; then
+            echo "Error: Version could not be extracted from commit message."
+            exit 1
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update VERSION in mocha.py
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          sed -i "s/VERSION = \".*\"/VERSION = \"$VERSION\"/" mocha.py
+
+      - name: Commit and Push Version Update
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add mocha.py
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "chore: bump version to ${{ steps.get_version.outputs.tag }} [skip ci]"
+            git pull --rebase origin main
+            git push origin main
+          else
+            echo "No changes to commit."
+          fi
+
+      - name: Tag release
+        run: |
+          TAG="${{ steps.get_version.outputs.tag }}"
+          git tag $TAG
+          git push origin $TAG
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: mocha.py release ${{ steps.get_version.outputs.tag }}
+          body: |
+            ## mocha.py release ${{ steps.get_version.outputs.tag }}
+            ### Changelogs
+
+            ${{ github.event.head_commit.message }}
+
+            ### How to update
+
+            `mocha.py` will automatically run self-update next time you start the tool. Or you can get the update manually [here](https://github.com/nekoo-moe/mocha.py/releases/latest).
+          draft: false
+          prerelease: false
