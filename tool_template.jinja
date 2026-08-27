@@ -1,0 +1,36 @@
+{%- if tools %}
+{{- '<|im_start|>system\n' }}
+{%- if messages[0]['role'] == 'system' %}
+{{- messages[0]['content'] + '\n\n' }}
+{%- endif %}
+{{- '# Tools\n\nYou have access to the following tools:\n\n' }}
+{{- tools | tojson }}
+{{- '\n\nWhen calling a tool, use the format: <tool_call>{"name": "...", "arguments": {...}}</tool_call>\n' }}
+{{- '<|im_end|>\n' }}
+{%- endif %}
+{%- for message in messages %}
+{%- if message['role'] == 'system' and not tools %}
+{{- '<|im_start|>system\n' + message['content'] + '<|im_end|>\n' }}
+{%- elif message['role'] == 'user' %}
+{{- '<|im_start|>user\n' + message['content'] + '<|im_end|>\n' }}
+{%- elif message['role'] == 'assistant' %}
+{{- '<|im_start|>assistant\n' }}
+{%- if message['content'] %}
+{{- message['content'] }}
+{%- endif %}
+{%- if message['tool_calls'] %}
+{%- for call in message['tool_calls'] %}
+{%- set fn = call['function'] if call['function'] is defined else call %}
+{{- '\n<tool_call>{"name": "' + fn['name'] + '", "arguments": ' }}
+{{- fn['arguments'] if fn['arguments'] is string else fn['arguments'] | tojson }}
+{{- '}</tool_call>' }}
+{%- endfor %}
+{%- endif %}
+{{- '<|im_end|>\n' }}
+{%- elif message['role'] == 'tool' %}
+{{- '<|im_start|>user\n<tool_response>\n' + message['content'] + '\n</tool_response><|im_end|>\n' }}
+{%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+{{- '<|im_start|>assistant\n' }}
+{%- endif %}
